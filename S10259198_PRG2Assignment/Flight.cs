@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace S10259198_PRG2Assignment
 {
-    internal class Flight
+    public abstract class Flight
     {
         public string FlightNo { get; set; }
         public string Origin { get; set; }
@@ -23,7 +23,7 @@ namespace S10259198_PRG2Assignment
             Status = stat;
         }
 
-        //to do CalculateFees() : double
+        public abstract double CalculateFees();
 
         public override string ToString()
         {

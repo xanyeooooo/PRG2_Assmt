@@ -23,7 +23,11 @@ namespace S10259198_PRG2Assignment
             Flight = f;
         }
 
-        //todo CalculateFees(): double
+        public double CalculateFees()
+        {
+            return 0;
+        }
+       
 
         public override string ToString()
         {

@@ -22,7 +22,50 @@ namespace S10259198_PRG2Assignment
             GateFees = new Dictionary<string, double>();
         }
 
-        //todo : AddAirline, AddBoardingGate, GetAirlineFromFlight, PrintAirlineFees
+        public bool AddAirline(Airline al)
+        {
+            if (Airlines.ContainsKey(al.Code))
+            {
+                return false;
+            }
+            Airlines.Add(al.Code, al);
+            return true;
+               
+        }
+
+        public bool AddBoardingGate (BoardingGate bG)
+        {
+            if(BoardingGates.ContainsKey(bG.GateName))
+            {
+                return false;
+            }
+            BoardingGates.Add(bG.GateName, bG);
+            return true;
+        }
+
+        public Airline GetAirlineFromFlight (Flight flight)
+        {
+            foreach(var airl in Airlines.Values)
+            {
+                if (airl.Flights.ContainsKey(flight.FlightNo))
+                {
+                    return airl;
+                }
+          
+            }
+            return null;
+        }
+
+        public void PrintAirlineFees()
+        {
+            foreach(var airl in Airlines.Values)
+            {
+                double fees = airl.CalculateFees();
+                Console.WriteLine($"Airline: {airl.Name}, Fees: {fees}");
+            }
+
+        }
+
         public override string ToString()
         {
             return base.ToString();
