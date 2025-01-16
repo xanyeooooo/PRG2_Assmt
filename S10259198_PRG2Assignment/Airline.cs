@@ -14,6 +14,8 @@ namespace S10259198_PRG2Assignment
         
         public Airline (string n, string c)
         {
+            Name = n;
+            Code = c;
             Flights = new Dictionary<string, Flight>();
         }
 
@@ -39,7 +41,53 @@ namespace S10259198_PRG2Assignment
 
         public double CalculateFees()
         {
-            return 0;
+            double totalFees = 0;
+            double discount = 0;
+            int flightCount = 0;
+            int earlyLateFlightCount = 0;
+            int customOriginCount = 0;
+            int noSpecialRequestCodeCount = 0;
+
+            foreach (var flight in Flights.Values)
+            {
+                totalFees += flight.CalculateFees();
+                flightCount++;
+
+                if (flight.ExpectedTime.Hour < 11 || flight.ExpectedTime.Hour > 21)
+                {
+                    earlyLateFlightCount++;
+                }
+
+                if (flight.Origin == "DXB" || flight.Origin == "BKK" || flight.Origin == "NRT")
+                {
+                    customOriginCount++;
+                }
+
+                if (string.IsNullOrEmpty(flight.Status))
+                {
+                    noSpecialRequestCodeCount++;
+                }
+            }
+
+            // For every 3 flights arriving/departing, airlines will receive a discount of $350
+            discount += (flightCount / 3) * 350;
+
+            // For more than 5 flights arriving/departing, airlines receive an additional discount of 3% off the Total Bill
+            if (flightCount > 5)
+            {
+                discount += totalFees * 0.03;
+            }
+
+            // For flights arriving/departing before 11am or after 9pm, airlines receive a discount of $110
+            discount += earlyLateFlightCount * 110;
+
+            // For airlines with the Origin of Dubai (DXB), Bangkok (BKK) or Tokyo (NRT), airlines receive a discount of $25
+            discount += customOriginCount * 25;
+
+            // For not indicating any Special Request Codes, airlines receive a discount of $50
+            discount += noSpecialRequestCodeCount * 50;
+
+            return totalFees - discount;
         }
 
         public override string ToString()

@@ -14,7 +14,7 @@ namespace S10259198_PRG2Assignment
         public bool SupportsLWTT { get; set; }
         public Flight Flight { get; set; }
 
-        public BoardingGate (string gn, bool supportscfft, bool supportsddjb, bool supportslwtt, Flight f)
+        public BoardingGate(string gn, bool supportscfft, bool supportsddjb, bool supportslwtt, Flight f)
         {
             GateName = gn;
             SupportsCFFT = supportscfft;
@@ -27,7 +27,7 @@ namespace S10259198_PRG2Assignment
         {
             return 0;
         }
-       
+
 
         public override string ToString()
         {

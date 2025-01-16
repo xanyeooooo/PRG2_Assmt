@@ -16,7 +16,8 @@ namespace S10259198_PRG2Assignment
 
         public override double CalculateFees()
         {
-            return 0;
+            RequestFee = 150;
+            return RequestFee;
         }
 
         public override string ToString()

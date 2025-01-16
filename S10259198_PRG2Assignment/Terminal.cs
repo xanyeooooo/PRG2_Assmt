@@ -16,6 +16,7 @@ namespace S10259198_PRG2Assignment
 
         public Terminal (string tn)
         {
+            TerminalName = tn;
             Airlines = new Dictionary<string, Airline>();
             Flights = new Dictionary<string, Flight>();
             BoardingGates = new Dictionary<string, BoardingGate>();

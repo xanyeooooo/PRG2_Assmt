@@ -14,7 +14,7 @@ namespace S10259198_PRG2Assignment
         public DateTime ExpectedTime { get; set; }
         public string Status { get; set; }
 
-        public Flight (string fno,string o,string dest, DateTime expecttime, string stat)
+        public Flight(string fno, string o, string dest, DateTime expecttime, string stat)
         {
             FlightNo = fno;
             Origin = o;
