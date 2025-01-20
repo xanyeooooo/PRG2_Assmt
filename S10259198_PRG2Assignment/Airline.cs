@@ -10,16 +10,16 @@ namespace S10259198_PRG2Assignment
     {
         public string Name { get; set; }
         public string Code { get; set; }
-        public Dictionary <string,Flight> Flights { get; set; }
-        
-        public Airline (string n, string c)
+        public Dictionary<string, Flight> Flights { get; set; }
+
+        public Airline(string n, string c)
         {
             Name = n;
             Code = c;
             Flights = new Dictionary<string, Flight>();
         }
 
-        public bool AddFlight (Flight flight)
+        public bool AddFlight(Flight flight)
         {
             if (Flights.ContainsKey(flight.FlightNo))
             {
@@ -29,7 +29,7 @@ namespace S10259198_PRG2Assignment
             return true;
         }
 
-        public bool RemoveFlight (Flight flight)
+        public bool RemoveFlight(Flight flight)
         {
             if (Flights.ContainsKey(flight.FlightNo))
             {
@@ -69,14 +69,14 @@ namespace S10259198_PRG2Assignment
                 }
             }
 
-            // For every 3 flights arriving/departing, airlines will receive a discount of $350
-            discount += (flightCount / 3) * 350;
-
             // For more than 5 flights arriving/departing, airlines receive an additional discount of 3% off the Total Bill
             if (flightCount > 5)
             {
                 discount += totalFees * 0.03;
             }
+
+            // For every 3 flights arriving/departing, airlines will receive a discount of $350
+            discount += (flightCount / 3) * 350;
 
             // For flights arriving/departing before 11am or after 9pm, airlines receive a discount of $110
             discount += earlyLateFlightCount * 110;
@@ -92,7 +92,7 @@ namespace S10259198_PRG2Assignment
 
         public override string ToString()
         {
-            return Name + Code ;
+            return Name + Code;
         }
     }
 }
