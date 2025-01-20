@@ -1,6 +1,7 @@
 ﻿using S10259198_PRG2Assignment;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 
 Terminal terminal = new Terminal("Terminal 5");
@@ -154,6 +155,118 @@ while (true)
                 Console.WriteLine($"{gate.GateName,-15} {gate.SupportsDDJB,-22} {gate.SupportsCFFT,-22} {gate.SupportsLWTT,-22}");
             }
             Console.WriteLine(" "); //separation line
+        }
+
+        else if (option == 3)
+        {
+            Console.WriteLine("=============================================");
+            Console.WriteLine("Assign a Boarding Gate to a flight");
+            Console.WriteLine("=============================================\n");
+                
+                    Console.Write("Enter Flight Number: ");
+                    string FlightNumber = Console.ReadLine().ToUpper();
+
+                    if (!flights.ContainsKey(flightNumber))
+                    {
+                        Console.WriteLine("Flight not found.");
+                        return;
+                    }
+
+                    Flight flight = flights[flightNumber];
+                    Console.WriteLine($"\nFlight Details:\nFlight Number: {flight.FlightNumber}\nAirline: {flight.AirlineName}\nOrigin: {flight.Origin}\nDestination: {flight.Destination}\nTime: {flight.Time}\nSpecial Request: {flight.AirlineCode}");
+
+                    Console.Write("Enter Boarding Gate: ");
+                    string gateName = Console.ReadLine();
+
+                    if (!boardingGates.ContainsKey(gateName))
+                    {
+                        Console.WriteLine("Invalid Boarding Gate.");
+                        return;
+                    }
+
+                    BoardingGate gate = boardingGates[gateName];
+
+                    if (gate.IsAssigned)
+                    {
+                        Console.WriteLine("This Boarding Gate is already assigned to another flight.");
+                        return;
+                    }
+
+                    gate.AssignToFlight(flight);
+                    flight.BoardingGate = gate;
+
+                    Console.WriteLine($"\nFlight {flight.FlightNumber} has been successfully assigned to Boarding Gate {gate.Name}.");
+
+                    Console.Write("Would you like to update the status of the flight? (Y/N): ");
+                    string updateStatus = Console.ReadLine()?.ToUpper();
+
+                    if (updateStatus == "Y")
+                    {
+                        Console.WriteLine("\n1. Delayed\n2. Boarding\n3. On Time");
+                        Console.Write("Please select status of the flight: ");
+                        string statusChoice = Console.ReadLine();
+
+                        if (statusChoice == "1") flight.Status = "Delayed";
+                        else if (statusChoice == "2") flight.Status = "Boarding";
+                        else flight.Status = "On Time";
+                    }
+                    else
+                    {
+                        flight.Status = "On Time";
+                    }
+
+                    Console.WriteLine($"\nUpdated Flight Details:\nFlight Number: {flight.FlightNumber}\nStatus: {flight.Status}\nAssigned Gate: {gate.Name}");
+                }
+            
+
+            else if (options == "N")
+            {
+                Console.WriteLine("Flight status not updated.");
+            }
+            else
+            {
+                Console.WriteLine("Invalid option. Please try again.");
+            }
+
+        
+
+        else if (option == 4)
+        {
+            Console.WriteLine("\n--- Create New Flight ---");
+
+            Console.Write("Enter Flight Number: ");
+            string flightNumber = Console.ReadLine();
+
+            if (flights.ContainsKey(flightNumber))
+            {
+                Console.WriteLine("Flight already exists.");
+                return;
+            }
+
+            Console.Write("Enter Airline Name: ");
+            string airlineName = Console.ReadLine();
+
+            Console.Write("Enter Origin: ");
+            string origin = Console.ReadLine();
+
+            Console.Write("Enter Destination: ");
+            string destination = Console.ReadLine();
+
+            Console.Write("Enter Expected Departure/Arrival Time: ");
+            string time = Console.ReadLine();
+
+            Console.Write("Enter Special Request Code (optional): ");
+            string specialRequest = Console.ReadLine();
+
+            var newFlight = string  Flight(flightNumber, airlineName, origin, destination, time, specialRequest);
+            flights[flightNumber] = newFlight;
+
+            // Save to CSV file how do I do this 
+            File.AppendAllText(flight.csv, $"{flightNumber},{airlineName},{origin},{destination},{time},{specialRequest}\n");
+
+            Console.WriteLine("\nNew flight added successfully!");
+            Console.WriteLine($"Flight Details:\nFlight Number: {flightNumber}\nAirline: {airlineName}\nOrigin: {origin}\nDestination: {destination}\nTime: {time}\nSpecial Request: {specialRequest}");
+
         }
 
         else if (option == 7)
