@@ -14,7 +14,7 @@ namespace S10259198_PRG2Assignment
             RequestFee = rf;
         }
 
-        public override double CalculateFees()
+        public double CalculateFees()
         {
             RequestFee = 300;
 
@@ -32,7 +32,7 @@ namespace S10259198_PRG2Assignment
                 fees += 300; //boarding gate
             }
 
-            return fees+RequestFee;
+            return fees + RequestFee;
         }
 
         public override string ToString()

@@ -9,12 +9,12 @@ namespace S10259198_PRG2Assignment
     internal class Terminal
     {
         public string TerminalName { get; set; }
-        public Dictionary <string,Airline> Airlines { get; set; }
-        public Dictionary <string,Flight> Flights { get; set; }
-        public Dictionary <string,BoardingGate> BoardingGates { get; set; }
-        public Dictionary <string,double> GateFees { get; set; }
+        public Dictionary<string, Airline> Airlines { get; set; }
+        public Dictionary<string, Flight> Flights { get; set; }
+        public Dictionary<string, BoardingGate> BoardingGates { get; set; }
+        public Dictionary<string, double> GateFees { get; set; }
 
-        public Terminal (string tn)
+        public Terminal(string tn)
         {
             TerminalName = tn;
             Airlines = new Dictionary<string, Airline>();
@@ -31,12 +31,12 @@ namespace S10259198_PRG2Assignment
             }
             Airlines.Add(al.Code, al);
             return true;
-               
+
         }
 
-        public bool AddBoardingGate (BoardingGate bG)
+        public bool AddBoardingGate(BoardingGate bG)
         {
-            if(BoardingGates.ContainsKey(bG.GateName))
+            if (BoardingGates.ContainsKey(bG.GateName))
             {
                 return false;
             }
@@ -44,22 +44,22 @@ namespace S10259198_PRG2Assignment
             return true;
         }
 
-        public Airline GetAirlineFromFlight (Flight flight)
+        public Airline GetAirlineFromFlight(Flight flight)
         {
-            foreach(var airl in Airlines.Values)
+            foreach (var airl in Airlines.Values)
             {
                 if (airl.Flights.ContainsKey(flight.FlightNo))
                 {
                     return airl;
                 }
-          
+
             }
             return null;
         }
 
         public void PrintAirlineFees()
         {
-            foreach(var airl in Airlines.Values)
+            foreach (var airl in Airlines.Values)
             {
                 double fees = airl.CalculateFees();
                 Console.WriteLine($"Airline: {airl.Name}, Fees: {fees}");

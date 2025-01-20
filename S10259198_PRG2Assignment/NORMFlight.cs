@@ -13,26 +13,9 @@ namespace S10259198_PRG2Assignment
 
         }
 
-        public override double CalculateFees()
+        public double CalculateFees()
         {
-            double fees = 0;
-
-            //Arriving flight fee
-            if (Destination == "SIN")
-            {
-                fees += 500;
-            }
-
-            //Departure flight fee + Boarding gate base fee
-            if (Origin == "SIN")
-            {
-                fees += 800; //departure
-                fees += 300; //boarding gate
-            }
-
-            return fees;
-
-
+            return 0;
         }
 
         public override string ToString()
