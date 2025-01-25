@@ -146,10 +146,10 @@ void MainMenu()
                 AssignBoardingGateToFlight();
             }
 
-            //else if (option == "4")
-            //{
-            //    CreateFlight();
-            //}
+            else if (option == "4")
+            {
+                CreateFlight();
+            }
 
             else if (option == "5")
             {
@@ -339,7 +339,37 @@ void AssignBoardingGateToFlight()
     }
 }
 
-//void CreateFlight() - TODO
+void CreateFlight()
+{
+    Console.Write("Enter Flight Number:");
+    string FlightNo = Console.ReadLine().ToUpper();
+    if (Flights.ContainsKey(FlightNo))
+    {
+        Console.WriteLine("Flight Number already exists. Please try again.");
+        return;
+    }
+
+    Console.Write("Enter Origin:");
+    string Origin = Console.ReadLine();
+
+    Console.Write("Enter Destination:");
+    string Destination = Console.ReadLine();
+
+    Console.Write("Enter Expected Departure/Arrival Time (dd/mm/yyyy hh:mm):");
+    string ExpectedTimestr = Console.ReadLine();
+
+    Console.Write("Enter Special Request Code (CFFT/DDJB/LWTT/None):");
+    string SpecialRequestCode = Console.ReadLine();
+
+    DateTime ExpectedTime = DateTime.Parse(ExpectedTimestr);
+
+    using (StreamWriter writer = File.AppendText("flights.csv"))
+    {
+        writer.WriteLine($"{FlightNo},{Origin},{Destination},{ExpectedTime},{SpecialRequestCode}");
+    }
+
+    Console.WriteLine($"Flight {FlightNo} has been added!");
+}
 
 
 void DisplayAirlineFlights(out Airline selectedAirline)
@@ -666,7 +696,9 @@ void DisplayFlightSchedule()
         Console.WriteLine("=============================================");
         Console.WriteLine($"{"Flight Number",-20}{"Airline Name",-20}{"Origin",-20}{"Destination",-25}{"Expected Departure / Arrival Time",-35}{" ",5}{"Status",-20}{"Boarding Gate",-20}");
 
-        foreach (var flight in terminal.Flights.Values)
+        var sortedFlights = terminal.Flights.Values.OrderBy(f => f);
+
+        foreach (var flight in sortedFlights)
         {
             string airlineName = "";
             string airlineCode = flight.FlightNo.Split(' ')[0];
