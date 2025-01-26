@@ -16,21 +16,23 @@ namespace S10259198_PRG2Assignment
 
         public double CalculateFees()
         {
-            RequestFee = 500;
+            
 
             double fees = 0;
             //Arriving flight fee
-            if (Destination == "SIN")
+            if (Destination == "Singapore (SIN)")
             {
                 fees += 500;
             }
 
             //Departure flight fee + Boarding gate base fee
-            if (Origin == "SIN")
+            if (Origin == "Singapore (SIN)")
             {
                 fees += 800; //departure
                 fees += 300; //boarding gate
             }
+
+            RequestFee = 500;
 
             return fees + RequestFee;
 

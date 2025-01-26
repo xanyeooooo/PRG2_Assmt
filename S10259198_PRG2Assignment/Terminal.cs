@@ -57,14 +57,13 @@ namespace S10259198_PRG2Assignment
             return null;
         }
 
-        public void PrintAirlineFees()
+        public void PrintAirlineFees(Dictionary<string, string> flightSpecialRequestCodes)
         {
             foreach (var airl in Airlines.Values)
             {
-                double fees = airl.CalculateFees();
+                double fees = Convert.ToDouble(airl.CalculateFees(flightSpecialRequestCodes));
                 Console.WriteLine($"Airline: {airl.Name}, Fees: {fees}");
             }
-
         }
 
         public override string ToString()

@@ -39,9 +39,9 @@ namespace S10259198_PRG2Assignment
             return false;
         }
 
-        public double CalculateFees()
+        public (double subtotal, double discount) CalculateFees(Dictionary<string, string> flightSpecialRequestCodes)
         {
-            double totalFees = 0;
+            double subtotal = 0;
             double discount = 0;
             int flightCount = 0;
             int earlyLateFlightCount = 0;
@@ -50,44 +50,82 @@ namespace S10259198_PRG2Assignment
 
             foreach (var flight in Flights.Values)
             {
-                totalFees += flight.CalculateFees();
+                double flightFee = 0;
+
+                // Base fee for arrival or departure
+                if (flight.Destination == "Singapore (SIN)")
+                {
+                    flightFee = 500; // Fee for arriving flight
+                }
+                else if (flight.Origin == "Singapore (SIN)")
+                {
+                    flightFee = 800; // Fee for departing flight
+
+                    // Boarding gate base fee
+                    flightFee += 300;
+                }
+
+                // Additional fee for special request codes
+                string specialRequestCode = "N.A";
+                foreach (var kvp in flightSpecialRequestCodes)
+                {
+                    if (kvp.Key == flight.FlightNo)
+                    {
+                        specialRequestCode = kvp.Value;
+                        break;
+                    }
+                }
+
+                if (specialRequestCode == "DDJB")
+                {
+                    flightFee += 300;
+                }
+                else if (specialRequestCode == "CFFT")
+                {
+                    flightFee += 150;
+                }
+                else if (specialRequestCode == "LWTT")
+                {
+                    flightFee += 500;
+                }
+                else
+                {
+                    noSpecialRequestCodeCount++;
+                }
+
+                subtotal += flightFee;
                 flightCount++;
 
-                if (flight.ExpectedTime.Hour < 11 || flight.ExpectedTime.Hour > 21)
+                if (flight.ExpectedTime.TimeOfDay <= new TimeSpan(11, 0, 0) || flight.ExpectedTime.TimeOfDay >= new TimeSpan(21, 0, 0))
                 {
                     earlyLateFlightCount++;
                 }
 
-                if (flight.Origin == "DXB" || flight.Origin == "BKK" || flight.Origin == "NRT")
+                if (flight.Origin == "Dubai (DXB)" || flight.Origin == "Bangkok (BKK)" || flight.Origin == "Tokyo (NRT)") 
                 {
                     customOriginCount++;
                 }
-
-                if (string.IsNullOrEmpty(flight.Status))
-                {
-                    noSpecialRequestCodeCount++;
-                }
             }
 
-            // For more than 5 flights arriving/departing, airlines receive an additional discount of 3% off the Total Bill
+            // For more than 5 flights arriving/departing, airlines receive an additional discount of 3% off the Total Bill //TESTED. WORKING
             if (flightCount > 5)
             {
-                discount += totalFees * 0.03;
+                discount += subtotal * 0.03;
             }
 
-            // For every 3 flights arriving/departing, airlines will receive a discount of $350
-            discount += (flightCount / 3) * 350;
-
-            // For flights arriving/departing before 11am or after 9pm, airlines receive a discount of $110
+            // For flights arriving/departing before 11am or after 9pm, airlines receive a discount of $110 //TESTED. WORKING
             discount += earlyLateFlightCount * 110;
 
-            // For airlines with the Origin of Dubai (DXB), Bangkok (BKK) or Tokyo (NRT), airlines receive a discount of $25
+            // For airlines with the Origin of Dubai (DXB), Bangkok (BKK) or Tokyo (NRT), airlines receive a discount of $25 //TESTED. WORKING
             discount += customOriginCount * 25;
 
-            // For not indicating any Special Request Codes, airlines receive a discount of $50
+            // For not indicating any Special Request Codes, airlines receive a discount of $50 //TESTED.WORKING
             discount += noSpecialRequestCodeCount * 50;
 
-            return totalFees - discount;
+            // For every 3 flights arriving/departing, airlines will receive a discount of $350 //TESTED.WORKING
+            discount += (flightCount / 3) * 350;
+
+            return (subtotal, discount);
         }
 
         public override string ToString()

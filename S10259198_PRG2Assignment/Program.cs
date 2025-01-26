@@ -1,4 +1,12 @@
-﻿using S10259198_PRG2Assignment;
+﻿//==========================================================
+// Student Number	: S10259198
+// Student Name	: Xander Yeo Kai Kiat
+// Partner Name	: Teo Yun Nise Kieira
+//==========================================================
+
+
+
+using S10259198_PRG2Assignment;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -15,7 +23,49 @@ int airlineCount = 0;
 int boardingGateCount = 0;
 int flightCount = 0;
 
-// Loading the airlines.csv file
+//// Loading the airlines.csv file [TO REMOVE]
+//Console.WriteLine($"Loading Airlines...");
+//using (StreamReader sr = new StreamReader("airlines.csv", false))
+//{
+//    string? s;
+//    s = sr.ReadLine(); //skips header
+//    while ((s = sr.ReadLine()) != null)
+//    {
+//        string[] data = s.Split(',');
+//        Airline a = new Airline(data[0], data[1]);
+//        terminal.Airlines.Add(data[0], a);
+//        airlineCount++;
+//    }
+//}
+//Console.WriteLine($"{airlineCount} Airlines Loaded!");
+
+//// Loading the boardinggates.csv file
+//Console.WriteLine("Loading Boarding Gates...");
+//using (StreamReader sr = new StreamReader("boardinggates.csv", false))
+//{
+//    string? s;
+//    s = sr.ReadLine(); // skips header
+//    while ((s = sr.ReadLine()) != null)
+//    {
+//        string[] data = s.Split(',');
+//        bool ddjbstatus = bool.Parse(data[1]);
+//        bool cfftstatus = bool.Parse(data[2]);
+//        bool lwttstatus = bool.Parse(data[3]);
+//        BoardingGate b = new BoardingGate(data[0], cfftstatus, ddjbstatus, lwttstatus, null);
+//        terminal.BoardingGates.Add(data[0], b);
+//        boardingGateCount++;
+//    }
+//}
+//Console.WriteLine($"{boardingGateCount} Boarding Gates Loaded!");
+
+
+
+
+
+
+
+
+//NEW LOADING OF AIRLINES.CSV
 Console.WriteLine($"Loading Airlines...");
 using (StreamReader sr = new StreamReader("airlines.csv", false))
 {
@@ -25,13 +75,19 @@ using (StreamReader sr = new StreamReader("airlines.csv", false))
     {
         string[] data = s.Split(',');
         Airline a = new Airline(data[0], data[1]);
-        terminal.Airlines.Add(data[0], a);
-        airlineCount++;
+        if (terminal.AddAirline(a))
+        {
+            airlineCount++;
+        }
+        else
+        {
+            Console.WriteLine($"Failed to add airline with code {data[0]}.");
+        }
     }
 }
 Console.WriteLine($"{airlineCount} Airlines Loaded!");
 
-// Loading the boardinggates.csv file
+//NEW LOADING OF BOARDINGGATES.CSV
 Console.WriteLine("Loading Boarding Gates...");
 using (StreamReader sr = new StreamReader("boardinggates.csv", false))
 {
@@ -44,8 +100,14 @@ using (StreamReader sr = new StreamReader("boardinggates.csv", false))
         bool cfftstatus = bool.Parse(data[2]);
         bool lwttstatus = bool.Parse(data[3]);
         BoardingGate b = new BoardingGate(data[0], cfftstatus, ddjbstatus, lwttstatus, null);
-        terminal.BoardingGates.Add(data[0], b);
-        boardingGateCount++;
+        if (terminal.AddBoardingGate(b))
+        {
+            boardingGateCount++;
+        }
+        else
+        {
+            Console.WriteLine($"Failed to add boarding gate with name {data[0]}.");
+        }
     }
 }
 Console.WriteLine($"{boardingGateCount} Boarding Gates Loaded!");
@@ -71,22 +133,18 @@ using (StreamReader sr = new StreamReader("flights.csv", false))
 
         if (flightSpecialRequestCode == "DDJB")
         {
-            requestFee = 300;
             f = new DDJBFlight(data[0], data[1], data[2], expectedtime, "Scheduled", requestFee);
         }
         else if (flightSpecialRequestCode == "CFFT")
         {
-            requestFee = 150;
             f = new CFFTFlight(data[0], data[1], data[2], expectedtime, "Scheduled", requestFee);
         }
         else if (flightSpecialRequestCode == "LWTT")
         {
-            requestFee = 500;
             f = new LWTTFlight(data[0], data[1], data[2], expectedtime, "Scheduled", requestFee);
         }
         else if (flightSpecialRequestCode == "N.A")
         {
-            requestFee = 0;
             f = new NORMFlight(data[0], data[1], data[2], expectedtime, "Scheduled");
         }
 
@@ -95,6 +153,17 @@ using (StreamReader sr = new StreamReader("flights.csv", false))
             terminal.Flights.Add(data[0], f);
             flightSpecialRequestCodes[data[0]] = flightSpecialRequestCode; // Store the special request code
             flightCount++;
+
+            // Add the flight to the respective airline
+            string airlineCode = data[0].Split(' ')[0];
+            if (terminal.Airlines.ContainsKey(airlineCode))
+            {
+                terminal.Airlines[airlineCode].AddFlight(f);
+            }
+            else
+            {
+                Console.WriteLine($"Error: Airline with code {airlineCode} not found for flight {data[0]}.");
+            }
         }
         else
         {
@@ -125,6 +194,7 @@ void MainMenu()
             Console.WriteLine("5. Display Airline Flights");
             Console.WriteLine("6. Modify Flight Details");
             Console.WriteLine("7. Display Flight Schedule");
+            Console.WriteLine("8. Display Total Fees for an Airline [Additional Feature b]");
             Console.WriteLine("0. Exit");
             Console.WriteLine("");
             Console.Write("Please select your option:");
@@ -167,6 +237,11 @@ void MainMenu()
                 DisplayFlightSchedule();
             }
 
+            else if (option == "8")
+            {
+                DisplayTotalFeePerAirlineForTheDay();
+            }
+
             else if (option == "0")
             {
                 Console.WriteLine("Goodbye!");
@@ -197,18 +272,8 @@ void ListAllFlights()
 
     foreach (var flight in terminal.Flights.Values)
     {
-        string airlineName = "";
-
-        string airlineCode = flight.FlightNo.Split(' ')[0];
-
-        foreach (var airline in terminal.Airlines.Values)
-        {
-            if (airline.Code == airlineCode)
-            {
-                airlineName = airline.Name;
-                break;
-            }
-        }
+        Airline airline = terminal.GetAirlineFromFlight(flight);
+        string airlineName = airline != null ? airline.Name : "Unknown";
 
         Console.WriteLine($"{flight.FlightNo,-15} {airlineName,-20} {flight.Origin,-20} {flight.Destination,-20} {flight.ExpectedTime:dd/MM/yyyy hh:mm tt}");
     }
@@ -651,10 +716,20 @@ void ModifyFlightDetails()
 
                             if (delOption == "Y")
                             {
-                                if (terminal.Flights.Remove(selectedFlight.FlightNo))
+                                // Remove the flight from the airline
+                                Airline airline = terminal.GetAirlineFromFlight(selectedFlight);
+                                if (airline != null && airline.RemoveFlight(selectedFlight))
                                 {
-                                    Console.WriteLine($"Flight {selectedFlight.FlightNo} has been deleted.");
-                                    return; // Return to main menu
+                                    // Remove the flight from the terminal
+                                    if (terminal.Flights.Remove(selectedFlight.FlightNo))
+                                    {
+                                        Console.WriteLine($"Flight {selectedFlight.FlightNo} has been deleted.");
+                                        return; // Return to main menu
+                                    }
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"Failed to remove flight {selectedFlight.FlightNo} from the airline.");
                                 }
                             }
                             else if (delOption == "N")
@@ -700,17 +775,8 @@ void DisplayFlightSchedule()
 
         foreach (var flight in sortedFlights)
         {
-            string airlineName = "";
-            string airlineCode = flight.FlightNo.Split(' ')[0];
-
-            foreach (var airline in terminal.Airlines.Values)
-            {
-                if (airline.Code == airlineCode)
-                {
-                    airlineName = airline.Name;
-                    break;
-                }
-            }
+            Airline airline = terminal.GetAirlineFromFlight(flight);
+            string airlineName = airline != null ? airline.Name : "Unknown";
 
             // Get boarding gate
             string assignedGate = "Unassigned";
@@ -736,10 +802,77 @@ void DisplayFlightSchedule()
     }
 }
 
+void DisplayTotalFeePerAirlineForTheDay()
+{
+    // Check if all flights have been assigned boarding gates
+    bool allFlightsAssigned = true;
+    foreach (var flight in terminal.Flights.Values)
+    {
+        bool assigned = false;
+        foreach (var gate in terminal.BoardingGates.Values)
+        {
+            if (gate.Flight == flight)
+            {
+                assigned = true;
+                break;
+            }
+        }
+        if (!assigned)
+        {
+            allFlightsAssigned = false;
+            Console.WriteLine($"Flight {flight.FlightNo} has not been assigned a boarding gate.");
+        }
+    }
 
+    if (!allFlightsAssigned)
+    {
+        Console.WriteLine("Please ensure that all unassigned flights have their boarding gates assigned before running this feature again.");
+        return;
+    }
 
+    Console.WriteLine("All flights have been assigned boarding gates.");
 
+    // Variables to store the overall totals
+    double overallSubtotal = 0;
+    double overallDiscount = 0;
+    double overallFinalFees = 0;
 
+    // Calculate and display the total fee per airline
+    Console.WriteLine("=============================================");
+    Console.WriteLine("Total Fee Per Airline for the Day");
+    Console.WriteLine("=============================================");
+    foreach (var airline in terminal.Airlines.Values)
+    {
+        var (subtotal, discount) = airline.CalculateFees(flightSpecialRequestCodes);
+        double finalFees = subtotal - discount;
+
+        // Update the overall totals
+        overallSubtotal += subtotal;
+        overallDiscount += discount;
+        overallFinalFees += finalFees;
+
+        // Display the breakdown for each airline
+        Console.WriteLine($"Airline: {airline.Name}");
+        Console.WriteLine($"Subtotal: {subtotal:C}");
+        Console.WriteLine($"Discount: {discount:C}");
+        Console.WriteLine($"Total Fee: {finalFees:C}");
+        Console.WriteLine("---------------------------------------------");
+    }
+
+    // Calculate the percentage of the subtotal discounts over the final total of fees
+    double discountPercentage = (overallDiscount / overallFinalFees) * 100;
+
+    // Display the overall totals
+    Console.WriteLine("=============================================");
+    Console.WriteLine("Overall Totals for All Airlines");
+    Console.WriteLine("=============================================");
+    Console.WriteLine($"Overall Subtotal Charges: {overallSubtotal:C}");
+    Console.WriteLine($"Overall Discount Deducted: {overallDiscount:C}");
+    Console.WriteLine($"Overall Final Fees Terminal 5 collects: {overallFinalFees:C}");
+    Console.WriteLine($"Discount Percentage (discounts over final total fees): {discountPercentage:F2}%");
+    Console.WriteLine("=============================================");
+    Console.WriteLine(" "); // separation line
+}
 
 
 
