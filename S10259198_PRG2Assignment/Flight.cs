@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace S10259198_PRG2Assignment
 {
-    public abstract class Flight: IComparable<Flight>
+    public class Flight: IComparable<Flight>
     {
         public string FlightNo { get; set; }
         public string Origin { get; set; }

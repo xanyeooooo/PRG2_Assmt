@@ -58,13 +58,6 @@ int flightCount = 0;
 //}
 //Console.WriteLine($"{boardingGateCount} Boarding Gates Loaded!");
 
-
-
-
-
-
-
-
 //NEW LOADING OF AIRLINES.CSV
 Console.WriteLine($"Loading Airlines...");
 using (StreamReader sr = new StreamReader("airlines.csv", false))
@@ -195,6 +188,7 @@ void MainMenu()
             Console.WriteLine("6. Modify Flight Details");
             Console.WriteLine("7. Display Flight Schedule");
             Console.WriteLine("8. Display Total Fees for an Airline [Additional Feature b]");
+            Console.WriteLine("9. Process all unassigned flights to boarding gates in bulk [Additional feature a] ");
             Console.WriteLine("0. Exit");
             Console.WriteLine("");
             Console.Write("Please select your option:");
@@ -240,6 +234,11 @@ void MainMenu()
             else if (option == "8")
             {
                 DisplayTotalFeePerAirlineForTheDay();
+            }
+
+            else if (option == "9")
+            {
+                ProcessUnassignedFlightsInBulk();
             }
 
             else if (option == "0")
@@ -406,36 +405,116 @@ void AssignBoardingGateToFlight()
 
 void CreateFlight()
 {
-    Console.Write("Enter Flight Number:");
-    string FlightNo = Console.ReadLine().ToUpper();
-    if (Flights.ContainsKey(FlightNo))
+    while (true)
     {
-        Console.WriteLine("Flight Number already exists. Please try again.");
-        return;
+        Console.Write("Enter Flight Number: ");
+        string flightNo = Console.ReadLine().ToUpper();
+
+        // Check if flight already exists
+        if (terminal.Flights.ContainsKey(flightNo))
+        {
+            Console.WriteLine("Flight Number already exists. Please try again.");
+            continue;
+        }
+
+        Console.Write("Enter Origin: ");
+        string origin = Console.ReadLine();
+        if (string.IsNullOrWhiteSpace(origin))
+        {
+            Console.WriteLine("Origin cannot be empty.");
+            continue;
+        }
+
+        Console.Write("Enter Destination: ");
+        string destination = Console.ReadLine();
+        if (string.IsNullOrWhiteSpace(destination))
+        {
+            Console.WriteLine("Destination cannot be empty.");
+            continue;
+        }
+
+        DateTime expectedTime;
+        while (true)
+        {
+            Console.Write("Enter Expected Departure/Arrival Time (dd/mm/yyyy hh:mm): ");
+            string expectedTimeStr = Console.ReadLine();
+            if (DateTime.TryParseExact(expectedTimeStr, "dd/MM/yyyy HH:mm",
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out expectedTime))
+            {
+                break; //Exits the loop if parsing is successful
+            }
+            Console.WriteLine("Invalid date/time format. Please use dd/mm/yyyy hh:mm");
+        }
+
+        string specialRequestCode;
+        while (true)
+        {
+            Console.Write("Enter Special Request Code (CFFT/DDJB/LWTT/None): ");
+            specialRequestCode = Console.ReadLine().Trim().ToUpper(); // Normalize input to uppercase and trim spaces
+
+            if (specialRequestCode != "CFFT" && specialRequestCode != "DDJB" &&
+                specialRequestCode != "LWTT" && specialRequestCode != "NONE")
+            {
+                Console.WriteLine("Invalid Special Request Code. Please try again.");
+                continue; // Retry for invalid input
+            }
+
+            break; // Valid input, exit loop
+        }
+
+
+        // Create flight object based on special request code
+        Flight newFlight;
+        if (specialRequestCode == "DDJB")
+        {
+            newFlight = new DDJBFlight(flightNo, origin, destination, expectedTime, "Scheduled", 0);
+        }
+        else if (specialRequestCode == "CFFT")
+        {
+            newFlight = new CFFTFlight(flightNo, origin, destination, expectedTime, "Scheduled", 0);
+        }
+        else if (specialRequestCode == "LWTT")
+        {
+            newFlight = new LWTTFlight(flightNo, origin, destination, expectedTime, "Scheduled", 0);
+        }
+        else
+        {
+            newFlight = new NORMFlight(flightNo, origin, destination, expectedTime, "Scheduled");
+        }
+
+        // Add flight to dict
+        terminal.Flights.Add(flightNo, newFlight);
+        Console.WriteLine($"Flight {flightNo} has been added!");
+
+        // Add flight to airline using AddFlight method
+        Airline airline = terminal.Airlines[flightNo];
+        if (airline.AddFlight(newFlight))
+        {
+            // Store special request code
+            flightSpecialRequestCodes[flightNo] = specialRequestCode == "NONE" ? "N.A" : specialRequestCode;
+
+            // Update flights.csv file
+            using (StreamWriter writer = File.AppendText("flights.csv"))
+            {
+                writer.WriteLine($"{flightNo},{origin},{destination},{expectedTime:dd/MM/yyyy HH:mm},{specialRequestCode}");
+            }
+
+            Console.WriteLine($"Flight {flightNo} has been added successfully!");
+        }
+        else
+        {
+            Console.WriteLine("Failed to add flight.");
+        }
+
+        Console.Write("Would you like to add another flight? (Y/N): ");
+        string addAnotherFlight = Console.ReadLine().ToUpper();
+        if (addAnotherFlight != "Y")
+        {
+            break;
+        }
     }
-
-    Console.Write("Enter Origin:");
-    string Origin = Console.ReadLine();
-
-    Console.Write("Enter Destination:");
-    string Destination = Console.ReadLine();
-
-    Console.Write("Enter Expected Departure/Arrival Time (dd/mm/yyyy hh:mm):");
-    string ExpectedTimestr = Console.ReadLine();
-
-    Console.Write("Enter Special Request Code (CFFT/DDJB/LWTT/None):");
-    string SpecialRequestCode = Console.ReadLine();
-
-    DateTime ExpectedTime = DateTime.Parse(ExpectedTimestr);
-
-    using (StreamWriter writer = File.AppendText("flights.csv"))
-    {
-        writer.WriteLine($"{FlightNo},{Origin},{Destination},{ExpectedTime},{SpecialRequestCode}");
-    }
-
-    Console.WriteLine($"Flight {FlightNo} has been added!");
 }
-
 
 void DisplayAirlineFlights(out Airline selectedAirline)
 {
@@ -874,5 +953,116 @@ void DisplayTotalFeePerAirlineForTheDay()
     Console.WriteLine(" "); // separation line
 }
 
+void ProcessUnassignedFlightsInBulk()
+{
+    Console.WriteLine("=============================================");
+    Console.WriteLine("Processing Unassigned Flights in Bulk");
+    Console.WriteLine("=============================================");
+
+    // Create a queue for unassigned flights
+    Queue<Flight> unassignedFlights = new Queue<Flight>();
+    int totalUnassignedFlights = 0;
+    int totalUnassignedGates = 0;
+    int totalProcessed = 0;
+    int totalPreviouslyAssigned = 0;
+
+    // Check for unassigned flights and add them to queue
+    foreach (var flight in terminal.Flights.Values)
+    {
+        bool isAssigned = false;
+        foreach (var gate in terminal.BoardingGates.Values)
+        {
+            if (gate.Flight == flight)
+            {
+                isAssigned = true;
+                totalPreviouslyAssigned++;
+                break;
+            }
+        }
+
+        if (!isAssigned)
+        {
+            unassignedFlights.Enqueue(flight);
+            totalUnassignedFlights++;
+        }
+    }
+
+    // Count unassigned gates
+    foreach (var gate in terminal.BoardingGates.Values)
+    {
+        if (gate.Flight == null)
+        {
+            totalUnassignedGates++;
+        }
+    }
+
+    Console.WriteLine($"Total Unassigned Flights: {totalUnassignedFlights}");
+    Console.WriteLine($"Total Available Gates: {totalUnassignedGates}");
+    Console.WriteLine("---------------------------------------------");
+
+    // Process each flight in the queue
+    while (unassignedFlights.Count > 0)
+    {
+        Flight currentFlight = unassignedFlights.Dequeue();
+        string specialRequestCode = flightSpecialRequestCodes.ContainsKey(currentFlight.FlightNo)
+            ? flightSpecialRequestCodes[currentFlight.FlightNo]
+            : "N.A";
+
+        // Find appropriate gate based on special request code
+        BoardingGate assignedGate = null;
+        foreach (var gate in terminal.BoardingGates.Values)
+        {
+            if (gate.Flight != null) continue;
+
+            bool isCompatible = specialRequestCode switch
+            {
+                "DDJB" => gate.SupportsDDJB,
+                "CFFT" => gate.SupportsCFFT,
+                "LWTT" => gate.SupportsLWTT,
+                _ => true // For flights with no special requests
+            };
+
+            if (isCompatible)
+            {
+                assignedGate = gate;
+                break;
+            }
+        }
+
+        // Assign gate if found
+        if (assignedGate != null)
+        {
+            assignedGate.Flight = currentFlight;
+            totalProcessed++;
+
+            // Display flight details
+            Airline airline = terminal.GetAirlineFromFlight(currentFlight);
+            string airlineName = airline != null ? airline.Name : "Unknown";
+
+            Console.WriteLine($"Flight Details:");
+            Console.WriteLine($"Flight Number: {currentFlight.FlightNo}");
+            Console.WriteLine($"Airline Name: {airlineName}");
+            Console.WriteLine($"Origin: {currentFlight.Origin}");
+            Console.WriteLine($"Destination: {currentFlight.Destination}");
+            Console.WriteLine($"Expected Time: {currentFlight.ExpectedTime}");
+            Console.WriteLine($"Special Request Code: {specialRequestCode}");
+            Console.WriteLine($"Assigned Gate: {assignedGate.GateName}");
+            Console.WriteLine("---------------------------------------------");
+        }
+        else
+        {
+            Console.WriteLine($"No compatible gate available for flight {currentFlight.FlightNo}");
+        }
+    }
+
+    // Calculate and display statistics
+    double processedPercentage = (totalProcessed / (double)(totalProcessed + totalPreviouslyAssigned)) * 100;
+
+    Console.WriteLine("\nProcessing Summary:");
+    Console.WriteLine($"Total Flights Processed and Assigned: {totalProcessed}");
+    Console.WriteLine($"Previously Assigned Flights: {totalPreviouslyAssigned}");
+    Console.WriteLine($"Percentage of Flights Processed Automatically: {processedPercentage:F2}%");
+    Console.WriteLine("======================================================");
+}
 
 
