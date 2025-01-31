@@ -23,41 +23,6 @@ int airlineCount = 0;
 int boardingGateCount = 0;
 int flightCount = 0;
 
-//// Loading the airlines.csv file [TO REMOVE]
-//Console.WriteLine($"Loading Airlines...");
-//using (StreamReader sr = new StreamReader("airlines.csv", false))
-//{
-//    string? s;
-//    s = sr.ReadLine(); //skips header
-//    while ((s = sr.ReadLine()) != null)
-//    {
-//        string[] data = s.Split(',');
-//        Airline a = new Airline(data[0], data[1]);
-//        terminal.Airlines.Add(data[0], a);
-//        airlineCount++;
-//    }
-//}
-//Console.WriteLine($"{airlineCount} Airlines Loaded!");
-
-//// Loading the boardinggates.csv file
-//Console.WriteLine("Loading Boarding Gates...");
-//using (StreamReader sr = new StreamReader("boardinggates.csv", false))
-//{
-//    string? s;
-//    s = sr.ReadLine(); // skips header
-//    while ((s = sr.ReadLine()) != null)
-//    {
-//        string[] data = s.Split(',');
-//        bool ddjbstatus = bool.Parse(data[1]);
-//        bool cfftstatus = bool.Parse(data[2]);
-//        bool lwttstatus = bool.Parse(data[3]);
-//        BoardingGate b = new BoardingGate(data[0], cfftstatus, ddjbstatus, lwttstatus, null);
-//        terminal.BoardingGates.Add(data[0], b);
-//        boardingGateCount++;
-//    }
-//}
-//Console.WriteLine($"{boardingGateCount} Boarding Gates Loaded!");
-
 //NEW LOADING OF AIRLINES.CSV
 Console.WriteLine($"Loading Airlines...");
 using (StreamReader sr = new StreamReader("airlines.csv", false))
@@ -67,18 +32,18 @@ using (StreamReader sr = new StreamReader("airlines.csv", false))
     while ((s = sr.ReadLine()) != null)
     {
         string[] data = s.Split(',');
-        Airline a = new Airline(data[0], data[1]);
-        if (terminal.AddAirline(a))
+        Airline a = new Airline(data[0], data[1]); //new airline object with [airlinename, airlinecode]
+        if (terminal.AddAirline(a)) //if added successfully, increment airlineCount
         {
             airlineCount++;
         }
         else
         {
-            Console.WriteLine($"Failed to add airline with code {data[0]}.");
+            Console.WriteLine($"Failed to add airline with code {data[0]}."); //display error message if failed to add (csv file wrong format etc.)
         }
     }
 }
-Console.WriteLine($"{airlineCount} Airlines Loaded!");
+Console.WriteLine($"{airlineCount} Airlines Loaded!"); //display total number of airlines loaded
 
 //NEW LOADING OF BOARDINGGATES.CSV
 Console.WriteLine("Loading Boarding Gates...");
@@ -89,10 +54,11 @@ using (StreamReader sr = new StreamReader("boardinggates.csv", false))
     while ((s = sr.ReadLine()) != null)
     {
         string[] data = s.Split(',');
-        bool ddjbstatus = bool.Parse(data[1]);
-        bool cfftstatus = bool.Parse(data[2]);
-        bool lwttstatus = bool.Parse(data[3]);
-        BoardingGate b = new BoardingGate(data[0], cfftstatus, ddjbstatus, lwttstatus, null);
+        //Convert.ToBoolean : converts string representation to boolean
+        bool ddjbstatus = Convert.ToBoolean(data[1]);
+        bool cfftstatus = Convert.ToBoolean(data[2]);
+        bool lwttstatus = Convert.ToBoolean(data[3]);
+        BoardingGate b = new BoardingGate(data[0], cfftstatus, ddjbstatus, lwttstatus, null); //create a new boardinggate with the parameters
         if (terminal.AddBoardingGate(b))
         {
             boardingGateCount++;
@@ -114,16 +80,17 @@ using (StreamReader sr = new StreamReader("flights.csv", false))
     while ((s = sr.ReadLine()) != null)
     {
         string[] data = s.Split(',');
-        DateTime expectedtime = DateTime.Parse(data[3]);
+        DateTime expectedtime = Convert.ToDateTime(data[3]);
         Flight? f = null; // Use nullable type
         string flightSpecialRequestCode = data[4];
         double requestFee = 0;
 
         if (string.IsNullOrEmpty(flightSpecialRequestCode))
         {
-            flightSpecialRequestCode = "N.A";
+            flightSpecialRequestCode = "N.A"; //if special request code in csv empty, set default value to N.A
         }
 
+        //Create flights based on the SRC
         if (flightSpecialRequestCode == "DDJB")
         {
             f = new DDJBFlight(data[0], data[1], data[2], expectedtime, "Scheduled", requestFee);
@@ -141,9 +108,9 @@ using (StreamReader sr = new StreamReader("flights.csv", false))
             f = new NORMFlight(data[0], data[1], data[2], expectedtime, "Scheduled");
         }
 
-        if (f != null)
+        if (f != null) //if flight is not empty
         {
-            terminal.Flights.Add(data[0], f);
+            terminal.Flights.Add(data[0], f); //add flight to terminal, with the flight no. as the key
             flightSpecialRequestCodes[data[0]] = flightSpecialRequestCode; // Store the special request code
             flightCount++;
 
@@ -252,10 +219,11 @@ void MainMenu()
                 Console.WriteLine("Invalid option. Please try again.");
             }
 
-
+           
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine($"An error occurred: {ex.Message}");
             Console.WriteLine("Invalid option. Please try again.");
         }
     }
@@ -407,30 +375,57 @@ void CreateFlight()
 {
     while (true)
     {
-        Console.Write("Enter Flight Number: ");
-        string flightNo = Console.ReadLine().ToUpper();
-
-        // Check if flight already exists
-        if (terminal.Flights.ContainsKey(flightNo))
+        string flightNo;
+        while (true)
         {
-            Console.WriteLine("Flight Number already exists. Please try again.");
-            continue;
+            Console.Write("Enter Flight Number: ");
+            flightNo = Console.ReadLine().ToUpper();
+
+            // Check if flight number is empty
+            if (string.IsNullOrWhiteSpace(flightNo))
+            {
+                Console.WriteLine("Flight Number cannot be empty. Please try again.");
+                continue;
+            }
+
+            // Check if flight already exists
+            if (terminal.Flights.ContainsKey(flightNo))
+            {
+                Console.WriteLine("Flight Number already exists. Please try again.");
+                continue;
+            }
+
+            break;
         }
 
-        Console.Write("Enter Origin: ");
-        string origin = Console.ReadLine();
-        if (string.IsNullOrWhiteSpace(origin))
+        string origin;
+        while (true)
         {
-            Console.WriteLine("Origin cannot be empty.");
-            continue;
+            Console.Write("Enter Origin: ");
+            origin = Console.ReadLine();
+
+            if (string.IsNullOrWhiteSpace(origin))
+            {
+                Console.WriteLine("Origin cannot be empty. Please try again.");
+                continue;
+            }
+
+            break;
         }
 
-        Console.Write("Enter Destination: ");
-        string destination = Console.ReadLine();
-        if (string.IsNullOrWhiteSpace(destination))
+        string destination;
+        while (true)
         {
-            Console.WriteLine("Destination cannot be empty.");
-            continue;
+            Console.Write("Enter Destination: ");
+            destination = Console.ReadLine();
+
+            if (string.IsNullOrWhiteSpace(destination))
+            {
+                Console.WriteLine("Destination cannot be empty. Please try again.");
+                continue;
+            }
+
+            break;
         }
 
         DateTime expectedTime;
@@ -438,12 +433,14 @@ void CreateFlight()
         {
             Console.Write("Enter Expected Departure/Arrival Time (dd/mm/yyyy hh:mm): ");
             string expectedTimeStr = Console.ReadLine();
+
             if (DateTime.TryParseExact(expectedTimeStr, "dd/MM/yyyy HH:mm",
                 System.Globalization.CultureInfo.InvariantCulture,
                 System.Globalization.DateTimeStyles.None, out expectedTime))
             {
-                break; //Exits the loop if parsing is successful
+                break; // Exits the loop if parsing is successful
             }
+
             Console.WriteLine("Invalid date/time format. Please use dd/mm/yyyy hh:mm");
         }
 
@@ -462,7 +459,6 @@ void CreateFlight()
 
             break; // Valid input, exit loop
         }
-
 
         // Create flight object based on special request code
         Flight newFlight;
@@ -487,24 +483,34 @@ void CreateFlight()
         terminal.Flights.Add(flightNo, newFlight);
         Console.WriteLine($"Flight {flightNo} has been added!");
 
-        // Add flight to airline using AddFlight method
-        Airline airline = terminal.Airlines[flightNo];
-        if (airline.AddFlight(newFlight))
+        // Extract airline code from flight number
+        string airlineCode = flightNo.Split(' ')[0];
+
+        // Check if airline exists
+        if (terminal.Airlines.ContainsKey(airlineCode))
         {
-            // Store special request code
-            flightSpecialRequestCodes[flightNo] = specialRequestCode == "NONE" ? "N.A" : specialRequestCode;
-
-            // Update flights.csv file
-            using (StreamWriter writer = File.AppendText("flights.csv"))
+            Airline airline = terminal.Airlines[airlineCode];
+            if (airline.AddFlight(newFlight))
             {
-                writer.WriteLine($"{flightNo},{origin},{destination},{expectedTime:dd/MM/yyyy HH:mm},{specialRequestCode}");
-            }
+                // Store special request code
+                flightSpecialRequestCodes[flightNo] = specialRequestCode == "NONE" ? "N.A" : specialRequestCode;
 
-            Console.WriteLine($"Flight {flightNo} has been added successfully!");
+                // Update flights.csv file
+                using (StreamWriter writer = File.AppendText("flights.csv"))
+                {
+                    writer.WriteLine($"{flightNo},{origin},{destination},{expectedTime:dd/MM/yyyy HH:mm},{specialRequestCode}");
+                }
+
+                Console.WriteLine($"Flight {flightNo} has been added to the CSV file successfully!");
+            }
+            else
+            {
+                Console.WriteLine("Failed to add flight to the airline.");
+            }
         }
         else
         {
-            Console.WriteLine("Failed to add flight.");
+            Console.WriteLine($"Error: Airline with code {airlineCode} not found.");
         }
 
         Console.Write("Would you like to add another flight? (Y/N): ");
@@ -516,17 +522,20 @@ void CreateFlight()
     }
 }
 
-void DisplayAirlineFlights(out Airline selectedAirline)
+void DisplayAirlineFlights(out Airline selectedAirline) //after the method is called, selectedAirline will contain the airline selected by user, which is used in subsequent code (ModifyFlightDetails)
 {
     selectedAirline = null;
-    while (true)
+    while (true) // loop until a valid airline is selected by user
     {
         try
         {
+            //headers
             Console.WriteLine("==============================================");
             Console.WriteLine("List of Airlines for Changi Airport Terminal 5");
             Console.WriteLine("==============================================");
             Console.WriteLine($"{"Airline Code",-13}{"Airline Name",-19}");
+
+
             // Listing all the airlines available
             foreach (var airline in terminal.Airlines.Values)
             {
@@ -606,27 +615,25 @@ Flight GetSelectedFlight()
 }
 
 
-
-
 void ModifyFlightDetails()
 {
     while (true)
     {
         try
         {
-            DisplayAirlineFlights(out Airline selectedAirline);
+            DisplayAirlineFlights(out Airline selectedAirline); //Display airlines and get the selectedAirline
 
-            Flight selectedFlight = GetSelectedFlight();
+            Flight selectedFlight = GetSelectedFlight(); //get selectedFlight
 
-            if (selectedFlight != null)
+            if (selectedFlight != null) //if valid flight is selected
             {
-                while (true)
+                while (true) //loop until user enters 1 (modify) or 2 (delete)
                 {
                     Console.WriteLine("1. Modify Flight");
                     Console.WriteLine("2. Delete Flight");
                     Console.Write("Choose an option:");
 
-                    string modifyorDelete = Console.ReadLine();
+                    string modifyorDelete = Console.ReadLine(); 
 
                     if (modifyorDelete == "1")
                     {
@@ -718,6 +725,7 @@ void ModifyFlightDetails()
                                 Console.Write("Enter new Special Request Code (CFFT/LWTT/DDJB): ");
                                 string newSpecialRequestCode = Console.ReadLine().ToUpper();
                                 if (string.IsNullOrEmpty(newSpecialRequestCode) || !flightSpecialRequestCodes.ContainsValue(newSpecialRequestCode))
+                                    //if user input is not CFFT/LWTTT/DDJB or is empty, print out error, else change the status
                                 {
                                     Console.WriteLine("Invalid Special Request Code. Please try again.");
                                     continue;
@@ -734,6 +742,7 @@ void ModifyFlightDetails()
                                 Console.Write("Enter new Boarding Gate: ");
                                 string newGate = Console.ReadLine().ToUpper();
                                 if (string.IsNullOrEmpty(newGate) || !terminal.BoardingGates.ContainsKey(newGate))
+                                    //if user input is not any of the gate in the dict BoardingGates, or empty user input
                                 {
                                     Console.WriteLine("Invalid Boarding Gate. Please try again.");
                                     continue;
@@ -762,6 +771,7 @@ void ModifyFlightDetails()
                         }
 
                         // Get boarding gate
+                        //Iterates through all the boarding gates to find the gate that is assigned to selectedFlight. If found, assignedGate variable is updated with the name, else remains Unassigned
                         string assignedGate = "Unassigned";
                         foreach (var gate in terminal.BoardingGates.Values)
                         {
