@@ -293,6 +293,16 @@ void AssignBoardingGateToFlight()
             }
             else
             {
+                // Remove the flight from any previously assigned gate
+                foreach (var currentGate in BoardingGates.Values)
+                {
+                    if (currentGate.Flight == Flights[flightNo])
+                    {
+                        currentGate.Flight = null;
+                        break;
+                    }
+                }
+
                 BoardingGates[gateName].Flight = Flights[flightNo];
                 Flights[flightNo].Status = "Scheduled";
                 break;
@@ -879,9 +889,10 @@ void DisplayFlightSchedule()
             }
 
             // Check for empty status and replace with "N.A."
-            string status = string.IsNullOrEmpty(flight.Status) ? "N.A." : flight.Status;
+            string status = string.IsNullOrEmpty(flight.Status) ? "N.A." : flight.Status; //if flight.status is null/empty, status = N.A., else if true, status is flight.status
+           
 
-            Console.WriteLine($"{flight.FlightNo,-20}{airlineName,-20}{flight.Origin,-20}{flight.Destination,-25}{flight.ExpectedTime,-25}{status,-20}{assignedGate,-20}");
+            Console.WriteLine($"{flight.FlightNo,-20}{airlineName,-20}{flight.Origin,-20}{flight.Destination,-25}{flight.ExpectedTime,-30}{status,-25}{assignedGate,-20}");
         }
         Console.WriteLine(" "); // separation line
     }
