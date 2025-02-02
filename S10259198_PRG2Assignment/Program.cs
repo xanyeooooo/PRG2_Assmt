@@ -2,6 +2,7 @@
 // Student Number	: S10259198
 // Student Name	: Xander Yeo Kai Kiat
 // Partner Name	: Teo Yun Nise Kieira
+// Partner Number	: S10259004
 //==========================================================
 
 
@@ -444,9 +445,9 @@ void CreateFlight()
             Console.Write("Enter Expected Departure/Arrival Time (dd/mm/yyyy hh:mm): ");
             string expectedTimeStr = Console.ReadLine();
 
-            if (DateTime.TryParseExact(expectedTimeStr, "dd/MM/yyyy HH:mm",
-                System.Globalization.CultureInfo.InvariantCulture,
-                System.Globalization.DateTimeStyles.None, out expectedTime))
+            if (DateTime.TryParseExact(expectedTimeStr, "dd/MM/yyyy HH:mm", //Parse: Converts the string representation of a date and time to its DateTime equivalent
+                System.Globalization.CultureInfo.InvariantCulture, //CultureInfo: Ensures date format is interpreted correctly
+                System.Globalization.DateTimeStyles.None, out expectedTime)) //DateTimeStyles: Specifies the style for a date and time value that is passed to the TryParseExact methods.
             {
                 break; // Exits the loop if parsing is successful
             }
@@ -458,7 +459,7 @@ void CreateFlight()
         while (true)
         {
             Console.Write("Enter Special Request Code (CFFT/DDJB/LWTT/None): ");
-            specialRequestCode = Console.ReadLine().Trim().ToUpper(); // Normalize input to uppercase and trim spaces
+            specialRequestCode = Console.ReadLine().Trim().ToUpper(); // Makes input uppercase and trim spaces
 
             if (specialRequestCode != "CFFT" && specialRequestCode != "DDJB" &&
                 specialRequestCode != "LWTT" && specialRequestCode != "NONE")
@@ -510,8 +511,6 @@ void CreateFlight()
                 {
                     writer.WriteLine($"{flightNo},{origin},{destination},{expectedTime:dd/MM/yyyy HH:mm},{specialRequestCode}");
                 }
-
-                Console.WriteLine($"Flight {flightNo} has been added to the CSV file successfully!");
             }
             else
             {
@@ -993,25 +992,25 @@ void ProcessUnassignedFlightsInBulk()
         bool isAssigned = false;
         foreach (var gate in terminal.BoardingGates.Values)
         {
-            if (gate.Flight == flight)
+            if (gate.Flight == flight) //Checks all gates to see if the flight is assigned to any of them
             {
                 isAssigned = true;
-                totalPreviouslyAssigned++;
+                totalPreviouslyAssigned++; //adds to the totalPreviouslyAssigned count
                 break;
             }
         }
 
         if (!isAssigned)
         {
-            unassignedFlights.Enqueue(flight);
+            unassignedFlights.Enqueue(flight); //if flight is not assigned to any gate, add to the queue, incease totalUnassignedFlights count
             totalUnassignedFlights++;
         }
     }
 
     // Count unassigned gates
-    foreach (var gate in terminal.BoardingGates.Values)
+    foreach (var gate in terminal.BoardingGates.Values) //checks all gates to see if they are unassigned
     {
-        if (gate.Flight == null)
+        if (gate.Flight == null) //if gate is unassigned, increase totalUnassignedGates count
         {
             totalUnassignedGates++;
         }
@@ -1022,20 +1021,20 @@ void ProcessUnassignedFlightsInBulk()
     Console.WriteLine("---------------------------------------------");
 
     // Process each flight in the queue
-    while (unassignedFlights.Count > 0)
+    while (unassignedFlights.Count > 0)   //while there are still flights in the queue
     {
-        Flight currentFlight = unassignedFlights.Dequeue();
-        string specialRequestCode = flightSpecialRequestCodes.ContainsKey(currentFlight.FlightNo)
+        Flight currentFlight = unassignedFlights.Dequeue(); //remove the flight from the queue
+        string specialRequestCode = flightSpecialRequestCodes.ContainsKey(currentFlight.FlightNo) //if the flight has a special request code, store it in specialRequestCode, else store N.A.
             ? flightSpecialRequestCodes[currentFlight.FlightNo]
             : "N.A";
 
         // Find appropriate gate based on special request code
-        BoardingGate assignedGate = null;
+        BoardingGate assignedGate = null; 
         foreach (var gate in terminal.BoardingGates.Values)
         {
             if (gate.Flight != null) continue;
 
-            bool isCompatible = specialRequestCode switch
+            bool isCompatible = specialRequestCode switch  //checks if the gate is compatible with the special request code
             {
                 "DDJB" => gate.SupportsDDJB,
                 "CFFT" => gate.SupportsCFFT,
@@ -1057,8 +1056,8 @@ void ProcessUnassignedFlightsInBulk()
             totalProcessed++;
 
             // Display flight details
-            Airline airline = terminal.GetAirlineFromFlight(currentFlight);
-            string airlineName = airline != null ? airline.Name : "Unknown";
+            Airline airline = terminal.GetAirlineFromFlight(currentFlight); 
+            string airlineName = airline != null ? airline.Name : "Unknown"; //if airline is not null, store the airline name in airlineName, else store Unknown
 
             Console.WriteLine($"Flight Details:");
             Console.WriteLine($"Flight Number: {currentFlight.FlightNo}");
@@ -1085,5 +1084,3 @@ void ProcessUnassignedFlightsInBulk()
     Console.WriteLine($"Percentage of Flights Processed Automatically: {processedPercentage:F2}%");
     Console.WriteLine("======================================================");
 }
-
-
