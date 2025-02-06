@@ -757,6 +757,13 @@ void ModifyFlightDetails()
                                     continue;
                                 }
 
+                                //Check if the gate the user input is already assigned to another flight
+                                if (terminal.BoardingGates[newGate].Flight != null)
+                                {
+                                    Console.WriteLine("The boarding gate is already assigned to another flight!");
+                                    continue;
+                                }
+
                                 // Remove flight from the current gate
                                 foreach (var gate in terminal.BoardingGates.Values)
                                 {
@@ -814,6 +821,17 @@ void ModifyFlightDetails()
 
                             if (delOption == "Y")
                             {
+
+                                //Remove the flight from boarding gate
+                                foreach (var gate in terminal.BoardingGates.Values)
+                                {
+                                    if (gate.Flight == selectedFlight)
+                                    {
+                                        gate.Flight = null;
+                                        break;
+                                    }
+                                }
+
                                 // Remove the flight from the airline
                                 Airline airline = terminal.GetAirlineFromFlight(selectedFlight);
                                 if (airline != null && airline.RemoveFlight(selectedFlight))
@@ -825,10 +843,15 @@ void ModifyFlightDetails()
                                         return; // Return to main menu
                                     }
                                 }
+
                                 else
                                 {
                                     Console.WriteLine($"Failed to remove flight {selectedFlight.FlightNo} from the airline.");
                                 }
+
+                                
+
+                                
                             }
                             else if (delOption == "N")
                             {
@@ -867,7 +890,7 @@ void DisplayFlightSchedule()
         Console.WriteLine("=============================================");
         Console.WriteLine("Flight Schedule for Changi Airport Terminal 5");
         Console.WriteLine("=============================================");
-        Console.WriteLine($"{"Flight Number",-20}{"Airline Name",-20}{"Origin",-20}{"Destination",-25}{"Expected Departure / Arrival Time",-35}{" ",5}{"Status",-20}{"Boarding Gate",-20}");
+        Console.WriteLine($"{"Flight Number",-20}{"Airline Name",-20}{"Origin",-20}{"Destination",-25}{"Expected Departure / Arrival Time",-32}{"Status",-15}{"Boarding Gate",-15}");
 
         var sortedFlights = terminal.Flights.Values.OrderBy(f => f);
 
@@ -891,7 +914,7 @@ void DisplayFlightSchedule()
             string status = string.IsNullOrEmpty(flight.Status) ? "N.A." : flight.Status; //if flight.status is null/empty, status = N.A., else if true, status is flight.status
            
 
-            Console.WriteLine($"{flight.FlightNo,-20}{airlineName,-20}{flight.Origin,-20}{flight.Destination,-25}{flight.ExpectedTime,-30}{status,-25}{assignedGate,-20}");
+            Console.WriteLine($"{flight.FlightNo,-20}{airlineName,-20}{flight.Origin,-20}{flight.Destination,-25}{flight.ExpectedTime,-32}{status,-15}{assignedGate,-15}");
         }
         Console.WriteLine(" "); // separation line
     }
