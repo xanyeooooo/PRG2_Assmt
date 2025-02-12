@@ -116,8 +116,8 @@ using (StreamReader sr = new StreamReader("flights.csv", false))
             flightCount++;
 
             // Add the flight to the respective airline
-            string airlineCode = data[0].Split(' ')[0];
-            if (terminal.Airlines.ContainsKey(airlineCode))
+            string airlineCode = data[0].Split(' ')[0]; //extract airline code from flight number
+            if (terminal.Airlines.ContainsKey(airlineCode)) //check if airline exists
             {
                 terminal.Airlines[airlineCode].AddFlight(f);
             }
@@ -240,7 +240,7 @@ void ListAllFlights()
 
     foreach (var flight in terminal.Flights.Values)
     {
-        Airline airline = terminal.GetAirlineFromFlight(flight);
+        Airline airline = terminal.GetAirlineFromFlight(flight); //get airline from flight
         string airlineName = airline != null ? airline.Name : "Unknown";
 
         Console.WriteLine($"{flight.FlightNo,-15} {airlineName,-20} {flight.Origin,-20} {flight.Destination,-20} {flight.ExpectedTime:dd/MM/yyyy hh:mm tt}");
@@ -272,7 +272,7 @@ void AssignBoardingGateToFlight()
         Console.Write("Enter Flight Number: ");
         string flightNo = Console.ReadLine().ToUpper();
 
-        if (!Flights.ContainsKey(flightNo))
+        if (!Flights.ContainsKey(flightNo)) //if flight number not found
         {
             Console.WriteLine("Flight not found. Please try again.");
             continue;
@@ -396,6 +396,11 @@ void CreateFlight()
             if (string.IsNullOrWhiteSpace(flightNo))
             {
                 Console.WriteLine("Flight Number cannot be empty. Please try again.");
+                continue;
+            }
+            else if (!System.Text.RegularExpressions.Regex.IsMatch(flightNo, @"^[a-zA-Z]{2}\s?\d{3}$")) //Regex: Ensures flight number is in the format of 2 letters followed by 3 digits
+            {
+                Console.WriteLine("Invalid Flight Number format. Please try again.");
                 continue;
             }
 
